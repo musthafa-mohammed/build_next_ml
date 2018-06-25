@@ -1,0 +1,76 @@
+<html><head>
+<title>cor_test.py</title>
+<meta name="Generator" content="htmlizer/[twisted, version 16.0.0]" />
+<link rel="alternate" href="cor_test.py" type="text/x-python" />
+
+</head>
+<body>
+<pre><span class="py-src-keyword">import</span> <span class="py-src-variable">math</span>
+
+<span class="py-src-keyword">import</span> <span class="py-src-variable">scipy</span> <span class="py-src-keyword">as</span> <span class="py-src-variable">s</span>
+
+<span class="py-src-keyword">import</span> <span class="py-src-variable">matplotlib</span>.<span class="py-src-variable">pyplot</span> <span class="py-src-keyword">as</span> <span class="py-src-variable">plt</span>
+
+<span class="py-src-keyword">from</span> <span class="py-src-variable">IPython</span> <span class="py-src-keyword">import</span> <span class="py-src-variable">display</span>
+<span class="py-src-keyword">from</span> <span class="py-src-variable">matplotlib</span> <span class="py-src-keyword">import</span> <span class="py-src-variable">cm</span>
+<span class="py-src-keyword">from</span> <span class="py-src-variable">matplotlib</span> <span class="py-src-keyword">import</span> <span class="py-src-variable">gridspec</span>
+<span class="py-src-keyword">from</span> <span class="py-src-variable">matplotlib</span> <span class="py-src-keyword">import</span> <span class="py-src-variable">pyplot</span> <span class="py-src-keyword">as</span> <span class="py-src-variable">plt</span>
+<span class="py-src-keyword">import</span> <span class="py-src-variable">numpy</span> <span class="py-src-keyword">as</span> <span class="py-src-variable">np</span>
+<span class="py-src-keyword">import</span> <span class="py-src-variable">pandas</span> <span class="py-src-keyword">as</span> <span class="py-src-variable">pd</span>
+<span class="py-src-keyword">from</span> <span class="py-src-variable">sklearn</span> <span class="py-src-keyword">import</span> <span class="py-src-variable">metrics</span>
+<span class="py-src-keyword">import</span> <span class="py-src-variable">tensorflow</span> <span class="py-src-keyword">as</span> <span class="py-src-variable">tf</span>
+<span class="py-src-keyword">from</span> <span class="py-src-variable">tensorflow</span>.<span class="py-src-variable">python</span>.<span class="py-src-variable">data</span> <span class="py-src-keyword">import</span> <span class="py-src-variable">Dataset</span>
+
+<span class="py-src-variable">tf</span>.<span class="py-src-variable">logging</span>.<span class="py-src-variable">set_verbosity</span>(<span class="py-src-variable">tf</span>.<span class="py-src-variable">logging</span>.<span class="py-src-variable">ERROR</span>)
+<span class="py-src-variable">pd</span>.<span class="py-src-variable">options</span>.<span class="py-src-variable">display</span>.<span class="py-src-variable">max_rows</span> = <span class="py-src-number">10</span>
+<span class="py-src-variable">pd</span>.<span class="py-src-variable">options</span>.<span class="py-src-variable">display</span>.<span class="py-src-variable">float_format</span> = <span class="py-src-string">'{:.1f}'</span>.<span class="py-src-variable">format</span>
+
+
+
+<span class="py-src-variable">df</span> = <span class="py-src-variable">pd</span>.<span class="py-src-variable">read_csv</span>(<span class="py-src-string">"./saved_items/Cement.csv"</span>,<span class="py-src-variable">sep</span>=<span class="py-src-string">";"</span>)
+<span class="py-src-variable">df</span> = <span class="py-src-variable">df</span>.<span class="py-src-variable">reindex</span>(<span class="py-src-variable">np</span>.<span class="py-src-variable">random</span>.<span class="py-src-variable">permutation</span>(<span class="py-src-variable">df</span>.<span class="py-src-variable">index</span>))
+
+
+
+<span class="py-src-variable">new</span>=<span class="py-src-variable">pd</span>.<span class="py-src-variable">DataFrame</span>()
+
+
+<span class="py-src-keyword">def</span> <span class="py-src-identifier">preprocess_features</span>(<span class="py-src-parameter">df</span>):
+  <span class="py-src-variable">processed_features</span> = <span class="py-src-variable">pd</span>.<span class="py-src-variable">DataFrame</span>()
+  <span class="py-src-variable">processed_features</span>[<span class="py-src-string">'area'</span>] = <span class="py-src-variable">df</span>[<span class="py-src-string">'area'</span>]/<span class="py-src-variable">df</span>[<span class="py-src-string">'area'</span>].<span class="py-src-variable">max</span>()
+  <span class="py-src-variable">new</span>[<span class="py-src-string">'area'</span>]=<span class="py-src-variable">processed_features</span>[<span class="py-src-string">'area'</span>]
+  <span class="py-src-variable">processed_features</span>[<span class="py-src-string">'district'</span>] = <span class="py-src-variable">df</span>[<span class="py-src-string">'district'</span>]
+  <span class="py-src-variable">processed_features</span>.<span class="py-src-variable">to_csv</span>(<span class="py-src-string">"./saved_items/x.csv"</span>, <span class="py-src-variable">sep</span>=<span class="py-src-string">';'</span>, <span class="py-src-variable">encoding</span>=<span class="py-src-string">'utf-8'</span>)
+  <span class="py-src-keyword">return</span> <span class="py-src-variable">processed_features</span>
+
+
+<span class="py-src-keyword">def</span> <span class="py-src-identifier">preprocess_targets</span>(<span class="py-src-parameter">df</span>):
+  <span class="py-src-variable">output_targets</span> = <span class="py-src-variable">pd</span>.<span class="py-src-variable">DataFrame</span>()
+  <span class="py-src-variable">output_targets</span>[<span class="py-src-string">'SUM(ed.qty)'</span>] = <span class="py-src-variable">df</span>[<span class="py-src-string">'SUM(ed.qty)'</span>]/<span class="py-src-variable">df</span>[<span class="py-src-string">'SUM(ed.qty)'</span>].<span class="py-src-variable">max</span>()
+  <span class="py-src-variable">new</span>[<span class="py-src-string">'SUM(ed.qty)'</span>]=<span class="py-src-variable">output_targets</span>[<span class="py-src-string">'SUM(ed.qty)'</span>]
+  <span class="py-src-variable">output_targets</span>.<span class="py-src-variable">to_csv</span>(<span class="py-src-string">"./saved_items/y.csv"</span>, <span class="py-src-variable">sep</span>=<span class="py-src-string">';'</span>, <span class="py-src-variable">encoding</span>=<span class="py-src-string">'utf-8'</span>)
+  <span class="py-src-keyword">return</span> <span class="py-src-variable">output_targets</span>
+
+
+<span class="py-src-variable">column_count</span> = <span class="py-src-variable">df</span>.<span class="py-src-variable">shape</span>[<span class="py-src-number">0</span>]
+<span class="py-src-variable">column_count_80</span> = <span class="py-src-variable">int</span>(<span class="py-src-number">0.8</span>*<span class="py-src-variable">column_count</span>)
+<span class="py-src-variable">column_count_20</span> = <span class="py-src-variable">column_count</span>-<span class="py-src-variable">column_count_80</span>-<span class="py-src-number">1</span>
+
+<span class="py-src-comment">#new.plot(x='area', y='SUM(ed.qty)', style='o')</span>
+
+
+<span class="py-src-variable">training_examples</span> = <span class="py-src-variable">preprocess_features</span>(<span class="py-src-variable">df</span>.<span class="py-src-variable">head</span>(<span class="py-src-variable">column_count_80</span>))
+<span class="py-src-variable">training_targets</span> = <span class="py-src-variable">preprocess_targets</span>(<span class="py-src-variable">df</span>.<span class="py-src-variable">head</span>(<span class="py-src-variable">column_count_80</span>))
+
+
+<span class="py-src-comment">#correlation_dataframe = training_examples.copy()</span>
+<span class="py-src-comment">#correlation_dataframe["target"] = training_targets["SUM(ed.qty)"]</span>
+
+<span class="py-src-comment">#print(correlation_dataframe.corr())</span>
+
+<span class="py-src-comment">#print(training_examples["area"].corr(training_targets["SUM(ed.qty)"]))</span>
+
+<span class="py-src-variable">plt</span>.<span class="py-src-variable">scatter</span>(<span class="py-src-variable">new</span>[<span class="py-src-string">'area'</span>], <span class="py-src-variable">new</span>[<span class="py-src-string">'SUM(ed.qty)'</span>])
+<span class="py-src-variable">plt</span>.<span class="py-src-variable">show</span>()
+</pre>
+</body>
